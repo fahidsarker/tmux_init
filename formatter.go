@@ -26,24 +26,28 @@ func FormatConfig(cfg Config) FConfig {
 	return FConfig{Name: cfg.Name, Root: cfg.Root, Windows: formatWindows(cfg.Windows)}
 }
 
-func formatWindows(windows map[string]WindowDefinition) []FWindowDefinition {
+func formatWindows(windows Windows) []FWindowDefinition {
+	if windows.IsShort {
+		return []FWindowDefinition{{Panes: []FPaneDefinition{{Cmds: windows.Cmds}}}}
+	}
 	var formatted []FWindowDefinition
-	for name, window := range windows {
-		nPanes := formatPanes(window.Panes)
-		if len(window.Cmds) > 0 {
+	for _, window := range windows.Named {
+		nPanes := formatPanes(window.Val.Panes)
+		if len(window.Val.Cmds) > 0 {
 			// create a pane with all cmds
-			nPanes = append(nPanes, FPaneDefinition{Cmds: window.Cmds})
+			nPanes = append(nPanes, FPaneDefinition{Cmds: window.Val.Cmds})
 		}
-		formatted = append(formatted, FWindowDefinition{Name: name, Dir: window.Dir, Pre: window.Pre, Post: window.Post, Layout: window.Layout, Panes: nPanes})
+		formatted = append(formatted, FWindowDefinition{Name: window.Name, Dir: window.Val.Dir, Pre: window.Val.Pre, Post: window.Val.Post, Layout: window.Val.Layout, Panes: nPanes})
 		// formatted[name] = FWindowDefinition{Dir: window.Dir, Pre: window.Pre, Post: window.Post, Layout: window.Layout, Panes: nPanes}
 	}
 	return formatted
 }
 
 func formatPanes(panes Panes) []FPaneDefinition {
+
 	var formatted []FPaneDefinition
 	for _, pane := range panes.Named {
-		formatted = append(formatted, FPaneDefinition{Dir: pane.Dir, Cmds: pane.Cmds, Pre: pane.Pre, Post: pane.Post})
+		formatted = append(formatted, FPaneDefinition{Dir: pane.Val.Dir, Cmds: pane.Val.Cmds, Pre: pane.Val.Pre, Post: pane.Val.Post})
 	}
 	for _, rawPane := range panes.Cmds {
 		formatted = append(formatted, FPaneDefinition{Cmds: []string{rawPane}})

@@ -7,10 +7,26 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+type OrderedMap[V interface{}] struct {
+	Map   map[string]V
+	Order []string
+}
+
+type Named[V interface{}] struct {
+	Name string
+	Val  V
+}
+
 type Config struct {
-	Name    string                      `yaml:"name"`
-	Root    string                      `yaml:"root"`
-	Windows map[string]WindowDefinition `yaml:"windows"`
+	Name    string  `yaml:"name"`
+	Root    string  `yaml:"root"`
+	Windows Windows `yaml:"windows"`
+}
+
+type Windows struct {
+	Cmds    []string `yaml:"-"` // used if it's a list
+	Named   []Named[WindowDefinition]
+	IsShort bool `yaml:"-"` // true if just []string
 }
 
 type WindowDefinition struct {
@@ -36,19 +52,17 @@ type PaneDefinition struct {
 
 type Panes struct {
 	Cmds    []string `yaml:"-"` // used if it's just a list
-	Named   map[string]PaneDefinition
+	Named   []Named[PaneDefinition]
 	IsShort bool `yaml:"-"` // true if just []string
 }
 
 func (w *WindowDefinition) UnmarshalYAML(value *yaml.Node) error {
-	// Try to unmarshal into []string
-	var raw []string
-	if err := value.Decode(&raw); err == nil {
-		w.Cmds = raw
+	var list []string
+	if err := value.Decode(&list); err == nil {
+		w.Cmds = list
 		w.IsShort = true
 		return nil
 	}
-
 	// Try full struct
 	type Alias WindowDefinition
 	var tmp Alias
@@ -60,14 +74,12 @@ func (w *WindowDefinition) UnmarshalYAML(value *yaml.Node) error {
 }
 
 func (p *PaneDefinition) UnmarshalYAML(value *yaml.Node) error {
-	// Try to unmarshal into []string
-	var raw []string
-	if err := value.Decode(&raw); err == nil {
-		p.Cmds = raw
+	var list []string
+	if err := value.Decode(&list); err == nil {
+		p.Cmds = list
 		p.IsShort = true
 		return nil
 	}
-
 	// Try full struct
 	type Alias PaneDefinition
 	var tmp Alias
@@ -89,14 +101,36 @@ func (p *Panes) UnmarshalYAML(value *yaml.Node) error {
 		return nil
 	}
 
-	var mp map[string]PaneDefinition
-	if err := value.Decode(&mp); err == nil {
-		p.Named = mp
-		p.IsShort = false
+	om, err := getOrderedMap[PaneDefinition](value)
+	if err != nil {
+		return err
+	}
+	ol, err := getOrderedList(om)
+	if err != nil {
+		return err
+	}
+	p.Named = *ol
+	return nil
+}
+
+func (w *Windows) UnmarshalYAML(value *yaml.Node) error {
+	var list []string
+	if err := value.Decode(&list); err == nil {
+		w.Cmds = list
+		w.IsShort = true
 		return nil
 	}
 
-	return fmt.Errorf("invalid format for panes")
+	om, err := getOrderedMap[WindowDefinition](value)
+	if err != nil {
+		return err
+	}
+	ol, err := getOrderedList(om)
+	if err != nil {
+		return err
+	}
+	w.Named = *ol
+	return nil
 }
 
 func (p Panes) MarshalJSON() ([]byte, error) {
@@ -104,4 +138,54 @@ func (p Panes) MarshalJSON() ([]byte, error) {
 		return json.Marshal(p.Cmds)
 	}
 	return json.Marshal(p.Named)
+}
+
+func getOrderedMap[V interface{}](node *yaml.Node) (om *OrderedMap[V], err error) {
+	content := node.Content
+	end := len(content)
+	count := end / 2
+
+	om = &OrderedMap[V]{
+		Map:   make(map[string]V, count),
+		Order: make([]string, 0, count),
+	}
+
+	for pos := 0; pos < end; pos += 2 {
+		keyNode := content[pos]
+		valueNode := content[pos+1]
+
+		if keyNode.Tag != "!!str" {
+			err = fmt.Errorf("expected a string key but got %s on line %d", keyNode.Tag, keyNode.Line)
+			return
+		}
+
+		var k string
+		if err = keyNode.Decode(&k); err != nil {
+			return
+		}
+
+		var v V
+		if err = valueNode.Decode(&v); err != nil {
+			return
+		}
+
+		om.Map[k] = v
+		om.Order = append(om.Order, k)
+	}
+
+	return
+}
+
+func getOrderedList[V interface{}](orderedMap *OrderedMap[V]) (ol *[]Named[V], err error) {
+	ol = &[]Named[V]{}
+
+	for _, k := range orderedMap.Order {
+		v, ok := orderedMap.Map[k]
+		if !ok {
+			err = fmt.Errorf("key %s not found in map", k)
+			return
+		}
+		*ol = append(*ol, Named[V]{Name: k, Val: v})
+	}
+	return ol, nil
 }
