@@ -1,2 +1,4 @@
 temp
 tmux_init
+# Added by goreleaser init:
+dist/
