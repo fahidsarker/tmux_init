@@ -2,7 +2,8 @@ $ErrorActionPreference = "Stop"
 
 $Repo = "fahidsarker/tmux_init"
 $BinaryName = "tinit"
-$InstallDir = "$env:USERPROFILE\.local\bin\tmux_init"
+$ProjectName = "tmux_init"
+$InstallDir = "$env:USERPROFILE\.local\bin\$ProjectName"
 $OS = "windows"
 
 # Detect architecture
@@ -19,7 +20,7 @@ $Latest = Invoke-RestMethod -Uri "https://api.github.com/repos/$Repo/releases/la
 $Tag = $Latest.tag_name
 
 # Construct download URL
-$File = "$BinaryName" + "_" + $Tag.TrimStart("v") + "_" + "$OS" + "_" + "$Arch" + ".tar.gz"
+$File = "$ProjectName" + "_" + $Tag.TrimStart("v") + "_" + "$OS" + "_" + "$Arch" + ".tar.gz"
 $Url = "https://github.com/$Repo/releases/download/$Tag/$File"
 $TempFile = "$env:TEMP\$File"
 

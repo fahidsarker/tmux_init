@@ -4,7 +4,8 @@ set -e
 
 REPO="fahidsarker/tmux_init"
 BINARY_NAME="tinit"
-INSTALL_DIR="$HOME/.local/bin/tmux_init"
+PROJECT_NAME="tmux_init"
+INSTALL_DIR="$HOME/.local/bin/$PROJECT_NAME"
 
 OS="$(uname | tr '[:upper:]' '[:lower:]')"
 ARCH="$(uname -m)"
@@ -20,7 +21,7 @@ esac
 # Get latest release tag
 LATEST=$(curl -s https://api.github.com/repos/$REPO/releases/latest | grep tag_name | cut -d '"' -f 4)
 
-FILE="${BINARY_NAME}_${LATEST#v}_${OS}_${ARCH}.tar.gz"
+FILE="${PROJECT_NAME}_${LATEST#v}_${OS}_${ARCH}.tar.gz"
 URL="https://github.com/$REPO/releases/download/$LATEST/$FILE"
 
 echo "📦 Downloading $FILE..."
@@ -49,7 +50,7 @@ if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
   esac
 
   if [[ -n "$CONFIG" ]]; then
-    echo "export PATH=\"\$HOME/.local/bin:\$PATH\"" >> "$CONFIG"
+    echo "export PATH=\"\$HOME/.local/bin/tmux_init:\$PATH\"" >> "$CONFIG"
     echo "✅ Added to PATH in $CONFIG"
     echo "👉 Run: source $CONFIG or restart your terminal"
   else
