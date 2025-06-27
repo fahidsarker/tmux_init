@@ -17,7 +17,7 @@
 
 ---
 
-> Instructions coming soon...
+> Instructions will be updated soon.
 <!-- ## 📦 Installation
 
 > tmux installed. -->
