@@ -20,7 +20,7 @@ $Latest = Invoke-RestMethod -Uri "https://api.github.com/repos/$Repo/releases/la
 $Tag = $Latest.tag_name
 
 # Construct download URL
-$File = "$ProjectName" + "_" + $Tag.TrimStart("v") + "_" + "$OS" + "_" + "$Arch" + ".tar.gz"
+$File = "$ProjectName" + "_" + $Tag.TrimStart("v") + "_" + "$OS" + "_" + "$Arch" + ".zip"
 $Url = "https://github.com/$Repo/releases/download/$Tag/$File"
 $TempFile = "$env:TEMP\$File"
 
@@ -30,7 +30,7 @@ Invoke-WebRequest -Uri $Url -OutFile $TempFile
 
 Write-Host "📂 Installing to $InstallDir..."
 New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
-tar -xf $TempFile -C $InstallDir
+Expand-Archive -Path $TempFile -DestinationPath $InstallDir
 Remove-Item $TempFile
 
 Write-Host "`n✅ Installed to $InstallDir"
