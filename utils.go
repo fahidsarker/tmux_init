@@ -82,7 +82,15 @@ func SysExec(command ...string) (string, error) {
 func AttachToSession(name string, window *string, pane *int) {
 	if IsInsideTmuxEnv() {
 		Log("Switching to session", name)
-		SysExec(fmt.Sprintf("tmux switch-client -t=%s", name))
+		// SysExec(fmt.Sprintf("tmux switch-client -t=%s", name))
+		if window != nil && pane != nil {
+			SysExec("tmux", "switch-client", "-t", fmt.Sprintf("%s:%s.%d", name, *window, *pane))
+		} else if window != nil {
+			SysExec("tmux", "switch-client", "-t", fmt.Sprintf("%s:%s", name, *window))
+		} else {
+			SysExec("tmux", "switch-client", "-t", name)
+		}
+		Log("Switched to session", name)
 	} else {
 		Log("Attaching to session", name)
 

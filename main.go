@@ -24,10 +24,11 @@ func getConfig() Config {
 
 func main() {
 	session := FormatConfig(getConfig())
+	paneIdx := GetPaneBaseIndex()
 
 	if HasTmuxSession(session.Name) {
 		Log("Session already exists")
-		AttachToSession(session.Name, nil, nil)
+		AttachToSession(session.Name, &session.Windows[0].Name, &paneIdx)
 	} else {
 		Log("Creating session")
 		SysExec(fmt.Sprintf("tmux new-session -d -s %s -n %s", session.Name, session.Name))
@@ -36,7 +37,6 @@ func main() {
 		for index, window := range session.Windows {
 			BuildWindow(session.Name, session.Root, index+windowBaseIdx, window, index != 0)
 		}
-		paneIdx := GetPaneBaseIndex()
 		AttachToSession(session.Name, &session.Windows[0].Name, &paneIdx)
 	}
 }
