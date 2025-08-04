@@ -36,14 +36,15 @@ func main() {
 		for index, window := range session.Windows {
 			BuildWindow(session.Name, session.Root, index+windowBaseIdx, window, index != 0)
 		}
-		AttachToSession(session.Name, nil, nil)
+		paneIdx := GetPaneBaseIndex()
+		AttachToSession(session.Name, &session.Windows[0].Name, &paneIdx)
 	}
 }
 
 func BuildWindow(sessionName string, rootDir string, index int, window FWindowDefinition, isNew bool) {
 	Log("Building window", window.Name, "index", index)
-	baseBaseIdx := GetPaneBaseIndex()
-	Log("Pane base index", baseBaseIdx)
+	basePaneIdx := GetPaneBaseIndex()
+	Log("Pane base index", basePaneIdx)
 	if window.Pre != "" {
 		SysExec(window.Pre)
 	}
@@ -55,7 +56,7 @@ func BuildWindow(sessionName string, rootDir string, index int, window FWindowDe
 	}
 
 	for paneIdx, pane := range window.Panes {
-		BuildPane(sessionName, filepath.Join(rootDir, window.Dir), index, pane, paneIdx+baseBaseIdx)
+		BuildPane(sessionName, filepath.Join(rootDir, window.Dir), index, pane, paneIdx+basePaneIdx)
 	}
 
 	if window.Layout != "" {

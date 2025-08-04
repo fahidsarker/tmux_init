@@ -17,7 +17,20 @@
 
 ---
 
-> Instructions will be updated soon.
-<!-- ## 📦 Installation
+## 📦 Installation
 
-> tmux installed. -->
+### Unix (macOS, Linux)
+```bash
+curl -fsSL https://raw.githubusercontent.com/fahidsarker/tmux_init/main/sh/unix.sh | bash
+```
+
+### Windows
+```bash
+irm https://raw.githubusercontent.com/fahidsarker/tmux_init/main/sh/windows.ps1 | iex
+```
+
+> Restart your shell/terminal after installation.
+
+---
+
+## 📝 Usage
